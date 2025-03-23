@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #333;
+        }
+        p {
+            font-size: 16px;
+            color: #666;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            padding: 12px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .news-card {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">AI-Powered News Generator</h1>
+            <div class="mb-3">
+            <label for="input" class="form-label">Enter a Topic:</label>
+            <input type="text" class="form-control" id="input" placeholder="e.g., Technology, Sports, Politics">
+        </div>
+        <button class="btn btn-primary w-100" onclick="getNews()">Generate News</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const input = document.getElementById("input");
+        async function getNews() {
+            const API_KEY = "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";
+            document.getElementById("result").innerHTML = ""; // Clear previous news
+            
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "post",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + API_KEY,
+                },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        {
+                            role: "user",
+                            content: "Generate news on topic " + input.value + " in div tag with css no html and body tag",
+                        },
+                    ],
+                }),
+            });
+            const body = await response.json();
+            // console.log(body);
+            const newDiv = document.createElement('div');
+            newDiv.classList.add('news-card');
+            newDiv.innerHTML = body.choices[0].message.content;
+            document.getElementById('result').appendChild(newDiv);
+        }
+    </script>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
+</body>
+</html>
