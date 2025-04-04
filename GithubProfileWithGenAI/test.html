@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Profile Fetcher</title>
+</head>
+<body>
+    <h2>AI Web Generator</h2>
+    <input type="text" id="username" placeholder="Enter GitHub Username">
+    <button onclick="generateProfile()">Generate Profile</button>
+    <div id="output"></div>
+
+    <script>
+        async function generateProfile() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                alert("Please enter a GitHub username!");
+                return;
+            }
+
+            try {
+                // Fetch AI-generated UI from Groq API
+                const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer YOUR_GROQ_API_KEY' // Replace with your actual API key
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are an AI that generates only functional and styled GitHub profile cards using HTML and CSS. The UI should be professional and responsive."
+                            },
+                            {
+                                role: "user",
+                                content: "Generate a clean and responsive GitHub profile card with an avatar, name, bio, repository count, and followers."
+                            }
+                        ]
+                    })
+                });
+
+                const groqData = await groqResponse.json();
+                if (groqData.choices && groqData.choices.length > 0) {
+                    document.getElementById("output").innerHTML = groqData.choices[0].message.content;
+                } else {
+                    document.getElementById("output").innerHTML = "Error: Failed to generate UI.";
+                    return;
+                }
+
+                // Fetch GitHub Profile Data
+                const githubResponse = await fetch(`https://api.github.com/users/${username}`);
+                const githubData = await githubResponse.json();
+
+                // Inject GitHub Data into AI-Generated UI
+                document.getElementById("github-avatar").src = githubData.avatar_url;
+                document.getElementById("github-username").innerText = githubData.name || githubData.login;
+                document.getElementById("github-bio").innerText = githubData.bio || "No bio available.";
+                document.getElementById("github-repos").innerText = `Repositories: ${githubData.public_repos}`;
+                document.getElementById("github-followers").innerText = `Followers: ${githubData.followers}`;
+
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("output").innerHTML = "Error fetching data.";
+            }
+        }
+    </script>
+</body>
+</html>

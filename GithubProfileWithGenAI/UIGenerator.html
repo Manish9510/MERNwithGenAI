@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Profile Fetcher</title>
+    <style id="dynamic-style"></style>
+  </head>
+  <body>
+    <h2>AI Web Generator</h2>
+    <input type="text" id="username" placeholder="Enter GitHub Username" />
+    <button onclick="generateProfile()">Generate Profile</button>
+    <div id="profileContainer"></div>
+
+    <script>
+      async function generateProfile() {
+        const username = document.getElementById("username").value.trim();
+        if (!username) {
+          alert("Please enter a GitHub username!");
+          return;
+        }
+
+        try {
+          // 1. Fetch AI-generated UI from Groq API
+          const groqResponse = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization:
+                  "Bearer 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", // Replace with your actual API key
+              },
+              body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      "Generate a clean, responsive GitHub profile card using HTML and CSS. Include placeholders like {{profile_pic}}, {{name}}, {{bio}}, {{followers}}, {{following}}, and {{repos_count}}.",
+                  },
+                  {
+                    role: "user",
+                    content:
+                      "Create a GitHub profile card UI with avatar, name, bio, repo count, and followers.",
+                  },
+                ],
+              }),
+            }
+          );
+
+          const groqData = await groqResponse.json();
+          console.log("Groq API Response:", groqData);
+
+          let generatedContent =
+            groqData.choices?.[0]?.message?.content?.trim() || "";
+
+          // Remove Markdown artifacts
+          generatedContent = generatedContent
+            .replace(/```html|```css|```/g, "")
+            .trim();
+
+          // Extract CSS and HTML separately
+          let cssMatch = generatedContent.match(/<style>([\s\S]*?)<\/style>/i);
+          let htmlMatch = generatedContent
+            .replace(/<style>[\s\S]*?<\/style>/i, "")
+            .trim();
+
+          if (cssMatch) {
+            document.getElementById("dynamic-style").textContent =
+              cssMatch[1].trim();
+          }
+
+          document.getElementById("profileContainer").innerHTML = htmlMatch;
+
+          // 2. Fetch GitHub Data
+          const [githubResponse, reposResponse] = await Promise.all([
+            fetch(`https://api.github.com/users/${username}`),
+            fetch(`https://api.github.com/users/${username}/repos?per_page=5`),
+          ]);
+
+          const userData = await githubResponse.json();
+          const reposData = await reposResponse.json();
+
+          // 3. Inject GitHub Data into AI-Generated UI
+          let profileHTML = htmlMatch
+            .replace(/{{profile_pic}}/g, userData.avatar_url)
+            .replace(/{{name}}/g, userData.name || userData.login)
+            .replace(/{{bio}}/g, userData.bio || "No bio available")
+            .replace(/{{followers}}/g, userData.followers)
+            .replace(/{{following}}/g, userData.following)
+            .replace(/{{repos_count}}/g, userData.public_repos)
+            .replace(
+              /{{repos}}/g,
+              reposData
+                .map(
+                  (repo) =>
+                    `<li><a href="${repo.html_url}" target="_blank">${repo.name}</a></li>`
+                )
+                .join("")
+            );
+
+          document.getElementById("profileContainer").innerHTML = profileHTML;
+        } catch (error) {
+          console.error("Error:", error.message);
+          document.getElementById(
+            "profileContainer"
+          ).innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+        }
+      }
+    </script>
+  </body>
+</html>

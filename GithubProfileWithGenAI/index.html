@@ -1,0 +1,28 @@
+<html>
+  <body>
+    <input id="input" type="text">
+    <button onclick="getProfile()">Get Profile</button>
+    <div id="list">
+      <!-- <div id="profile">
+        <div id="name"></div>
+        <div id="pic"></div>
+      </div> -->
+    </div>
+    <script>
+      const input = document.getElementById('input');
+      const list = document.getElementById('list');
+      const getProfile = async () => {
+        const response = await fetch(`https://api.github.com/users/${input.value}`, { method: 'GET' });
+        const body = await response.json();
+        console.log(body);
+
+        list.innerHTML = list.innerHTML + 
+        `<div id="profile">
+          <div id="name">${body.name}</div>
+          <img width="100" height="100" id="pic" src="${body.avatar_url}">
+        </div>`
+      }
+    </script>
+  </body>
+</html>
+
